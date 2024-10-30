@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">NewPokedex</string>
+
+    <!-- ******* COMMONS ****  -->
+    <string name="empty_string" />
+    <string name="navigate_back">Navigate to the previous screen</string>
+
+
+    <!-- ******* LOGIN ****  -->
+    <string name="login_heading_text">Iniciar sesión</string>
+    <string name="login_email_id_or_phone_label">Correo electrónico o Número celular</string>
+    <string name="login_password_label">Contraseña</string>
+    <string name="login_button_text">Iniciar sesión</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="icon_password_visible">Contraseña Visible</string>
+    <string name="icon_password_hidden">Contraseña Hidden</string>
+    <!--Login Error Messages-->
+    <string name="login_error_msg_empty_email_mobile">Por favor ingresa un email o número celular</string>
+    <string name="login_error_msg_format_email_mobile">Por favor ingresa un email válido</string>
+    <string name="login_error_msg_format_phone_mobile">Por favor ingresa un número de teléfono válido</string>
+    <string name="login_error_msg_empty_password">Por favor ingresa una contraseña</string>
+    <string name="login_error_msg_format_password">Por favor ingresa una contraseña de al menos 6 caracteres</string>
+    <!--Login Page - Register Section-->
+    <string name="do_not_have_account">¿No tienes una cuenta?</string>
+    <string name="register">Registrate</string>
+
+
+    <!-- ******* REGISTRATION ****  -->
+    <string name="registration_heading_text">Crear cuenta</string>
+    <string name="registration_email_label">Correo eléctronico</string>
+    <string name="registration_mobile_label">Número celular</string>
+    <string name="registration_password_label">Contraseña</string>
+    <string name="registration_confirm_password_label">Confirmar contraseña</string>
+    <string name="registration_button_text">Crear cuenta</string>
+    <string name="back_to_login">Regresar a login</string>
+    <!--Registration Error Messages-->
+    <string name="registration_error_msg_empty_email">Please ingresa un correo eléctronico</string>
+    <string name="registration_error_msg_empty_mobile">Por favor ingresa un número celular</string>
+    <string name="registration_error_msg_empty_password">Por favor ingresa una contraseña</string>
+    <string name="registration_error_msg_empty_confirm_password">Por favor confirma tu contraseña</string>
+    <string name="registration_error_msg_password_mismatch">Por favor ingresa la misma contraseña que arriba</string>
+
+
+    <!-- ******* DASHBOARD ****  -->
+    <string name="dashboard_title_welcome_user">Welcome User</string>
+
+</resources>
