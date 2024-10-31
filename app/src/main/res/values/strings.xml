@@ -40,6 +40,11 @@
     <string name="registration_error_msg_empty_confirm_password">Por favor confirma tu contraseña</string>
     <string name="registration_error_msg_password_mismatch">Por favor ingresa la misma contraseña que arriba</string>
 
+    <!-- ******* RECOVERY PASSWORD ****  -->
+    <string name="recovery_password_email_label">Correo electrónico o Número celular</string>
+    <string name="recovery_password_title">Recuperar cuenta</string>
+    <string name="recovery_password_body">Correo electrónico o número celular, que se uso para crear la cuenta, enviaremos instrucciones para recuperar su contraseña</string>
+    <string name="recovery_password_button_text">Enviar</string>
 
     <!-- ******* DASHBOARD ****  -->
     <string name="dashboard_title_welcome_user">Welcome User</string>

@@ -3,8 +3,14 @@ package com.dalvik.newpokedex.screens.register
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.dalvik.newpokedex.ui.common.state.ErrorState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class RegistrationViewModel : ViewModel() {
+/**
+ * ViewModel for Register Screen
+ */
+@HiltViewModel
+class RegistrationViewModel @Inject constructor() : ViewModel() {
 
     var registrationState = mutableStateOf(RegistrationState())
         private set

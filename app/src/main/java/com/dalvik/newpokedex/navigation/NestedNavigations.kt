@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.dalvik.newpokedex.screens.dashboard.DashboardScreen
 import com.dalvik.newpokedex.screens.login.LoginScreen
+import com.dalvik.newpokedex.screens.recovery_password.RecoveryPasswordScreen
 import com.dalvik.newpokedex.screens.register.RegistrationScreen
 
 
@@ -26,7 +27,9 @@ fun NavGraphBuilder.unauthenticatedGraph(navController: NavController) {
                 onNavigateToRegistration = {
                     navController.navigate(route = NavigationRoutes.Unauthenticated.Registration.route)
                 },
-                onNavigateToForgotPassword = {},
+                onNavigateToForgotPassword = {
+                    navController.navigate(route = NavigationRoutes.Unauthenticated.RecoveryPassword.route)
+                },
                 onNavigateToAuthenticatedRoute = {
                     navController.navigate(route = NavigationRoutes.Authenticated.NavigationRoute.route) {
                         popUpTo(route = NavigationRoutes.Unauthenticated.NavigationRoute.route) {
@@ -40,6 +43,22 @@ fun NavGraphBuilder.unauthenticatedGraph(navController: NavController) {
         // Registration
         composable(route = NavigationRoutes.Unauthenticated.Registration.route) {
             RegistrationScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onNavigateToAuthenticatedRoute = {
+                    navController.navigate(route = NavigationRoutes.Authenticated.NavigationRoute.route) {
+                        popUpTo(route = NavigationRoutes.Unauthenticated.NavigationRoute.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        // Recovery password
+        composable(route = NavigationRoutes.Unauthenticated.RecoveryPassword.route) {
+            RecoveryPasswordScreen(
                 onNavigateBack = {
                     navController.navigateUp()
                 },

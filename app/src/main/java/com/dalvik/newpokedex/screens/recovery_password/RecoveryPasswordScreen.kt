@@ -1,4 +1,4 @@
-package com.dalvik.newpokedex.screens.register
+package com.dalvik.newpokedex.screens.recovery_password
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,23 +21,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dalvik.newpokedex.R
+import com.dalvik.newpokedex.ui.common.customComposableViews.BodyText
 import com.dalvik.newpokedex.ui.common.customComposableViews.SmallClickableWithIconAndText
 import com.dalvik.newpokedex.ui.common.customComposableViews.TitleText
 import com.dalvik.newpokedex.ui.theme.AppTheme
 import com.dalvik.newpokedex.ui.theme.NewPokedexTheme
 
 @Composable
-fun RegistrationScreen(
-    registrationViewModel: RegistrationViewModel = hiltViewModel<RegistrationViewModel>(),
+fun RecoveryPasswordScreen(
+    recoveryPasswordViewModel: RecoveryPasswordViewModel = hiltViewModel<RecoveryPasswordViewModel>(),
     onNavigateBack: () -> Unit,
     onNavigateToAuthenticatedRoute: () -> Unit
 ) {
 
-    val registrationState by remember {
-        registrationViewModel.registrationState
+    val recoveryPasswordState by remember {
+        recoveryPasswordViewModel.recoveryPasswordState
     }
 
-    if (registrationState.isRegistrationSuccessful) {
+    if (recoveryPasswordState.isRecoveryPasswordSuccessful) {
         LaunchedEffect(key1 = true) {
             onNavigateToAuthenticatedRoute.invoke()
         }
@@ -64,7 +65,7 @@ fun RegistrationScreen(
             )
 
 
-            // Main card Content for Registration
+            // Main card Content for Recovery password
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,47 +78,32 @@ fun RegistrationScreen(
                         .padding(bottom = AppTheme.dimens.paddingExtraLarge)
                 ) {
 
-                    // Heading Registration
+                    // Heading Recovery password
                     TitleText(
                         modifier = Modifier.padding(top = AppTheme.dimens.paddingLarge),
-                        text = stringResource(id = R.string.registration_heading_text)
+                        text = stringResource(id = R.string.recovery_password_title)
+                    )
+
+                    // Body Registration
+                    BodyText(
+                        modifier = Modifier.padding(top = AppTheme.dimens.paddingLarge),
+                        text = stringResource(id = R.string.recovery_password_body),
                     )
 
                     /**
-                     * Registration Inputs Composable
+                     * Recovery password Inputs Composable
                      */
-                    RegistrationInputs(
-                        registrationState = registrationState,
-                        onEmailIdChange = { inputString ->
-                            registrationViewModel.onUiEvent(
-                                registrationUiEvent = RegistrationUiEvent.EmailChanged(
-                                    inputValue = inputString
-                                )
-                            )
-                        },
-                        onMobileNumberChange = { inputString ->
-                            registrationViewModel.onUiEvent(
-                                registrationUiEvent = RegistrationUiEvent.MobileNumberChanged(
-                                    inputValue = inputString
-                                )
-                            )
-                        },
-                        onPasswordChange = { inputString ->
-                            registrationViewModel.onUiEvent(
-                                registrationUiEvent = RegistrationUiEvent.PasswordChanged(
-                                    inputValue = inputString
-                                )
-                            )
-                        },
-                        onConfirmPasswordChange = { inputString ->
-                            registrationViewModel.onUiEvent(
-                                registrationUiEvent = RegistrationUiEvent.ConfirmPasswordChanged(
+                    RecoveryPasswordInputs(
+                        recoveryPasswordState = recoveryPasswordState,
+                        onEmailOrPhoneChange = { inputString ->
+                            recoveryPasswordViewModel.onUiEvent(
+                                recoveryPasswordUiEvent = RecoveryPasswordUiEvent.EmailOrPhoneChanged(
                                     inputValue = inputString
                                 )
                             )
                         },
                         onSubmit = {
-                            registrationViewModel.onUiEvent(registrationUiEvent = RegistrationUiEvent.Submit)
+                            recoveryPasswordViewModel.onUiEvent(recoveryPasswordUiEvent = RecoveryPasswordUiEvent.Submit)
                         }
                     )
                 }
@@ -129,8 +115,8 @@ fun RegistrationScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewRegistrationScreen() {
+fun PreviewRecoveryPasswordScreen() {
     NewPokedexTheme {
-        RegistrationScreen(onNavigateBack = {}, onNavigateToAuthenticatedRoute = {})
+        RecoveryPasswordScreen(onNavigateBack = {}, onNavigateToAuthenticatedRoute = {})
     }
 }

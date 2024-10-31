@@ -37,6 +37,22 @@ fun MediumTitleText(
 }
 
 @Composable
+fun BodyText(
+    modifier: Modifier = Modifier,
+    text: String,
+    textAlign: TextAlign = TextAlign.Start
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        textAlign = textAlign
+    )
+}
+
+
+@Composable
 fun ErrorTextInputField(
     modifier: Modifier = Modifier,
     text: String
