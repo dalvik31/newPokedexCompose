@@ -1,24 +1,37 @@
 package com.dalvik.newpokedex.screens.login
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.dalvik.newpokedex.App
+import com.dalvik.newpokedex.domain.FirebaseGetUserUseCase
+import com.dalvik.newpokedex.domain.FirebaseUserLoginUseCase
 import com.dalvik.newpokedex.extensions.emailFormat
-import com.dalvik.newpokedex.extensions.phoneFormat
-import com.dalvik.newpokedex.screens.login.state.LoginErrorState
-import com.dalvik.newpokedex.screens.login.state.LoginState
-import com.dalvik.newpokedex.ui.common.state.ErrorState
+import com.dalvik.newpokedex.firebase.Resource
+import com.dalvik.newpokedex.ui.common.state.ErrorResourceState
+import com.dalvik.newpokedex.ui.common.state.ErrorStringState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for Login Screen
  */
 @HiltViewModel
-class LoginViewModel @Inject constructor() : ViewModel() {
+open class LoginViewModel @Inject constructor(
+    private val firebaseUserLoginUseCase: FirebaseUserLoginUseCase,
+    private val firebaseGetUserUseCase: FirebaseGetUserUseCase,
+    private val app: App
+) : ViewModel() {
 
-    var loginState = mutableStateOf(LoginState())
+
+    var loginState = MutableStateFlow(LoginState())
         private set
+
+    init {
+        isLogin()
+    }
 
     /**
      * Function called on any login event [LoginUiEvent]
@@ -26,15 +39,17 @@ class LoginViewModel @Inject constructor() : ViewModel() {
     fun onUiEvent(loginUiEvent: LoginUiEvent) {
         when (loginUiEvent) {
 
-            // Email/Mobile changed
-            is LoginUiEvent.EmailOrMobileChanged -> {
+            // Email changed
+            is LoginUiEvent.EmailChanged -> {
                 loginState.value = loginState.value.copy(
-                    emailOrMobile = loginUiEvent.inputValue,
+                    userEmail = loginUiEvent.inputValue,
                     errorState = loginState.value.errorState.copy(
-                        emailOrMobileErrorState = if (loginUiEvent.inputValue.trim().isNotEmpty())
-                            ErrorState()
+                        emailErrorResourceState = if (loginUiEvent.inputValue.trim()
+                                .isNotEmpty()
+                        )
+                            ErrorResourceState()
                         else
-                            emailOrMobileEmptyErrorState
+                            emailEmptyErrorResourceState
                     )
                 )
             }
@@ -42,13 +57,15 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             // Password changed
             is LoginUiEvent.PasswordChanged -> {
                 loginState.value = loginState.value.copy(
-                    password = loginUiEvent.inputValue,
+                    userPassword = loginUiEvent.inputValue,
                     errorState = loginState.value.errorState.copy(
-                        passwordErrorState = if (loginUiEvent.inputValue.trim().isNotEmpty())
-                            ErrorState()
+                        passwordErrorResourceState = if (loginUiEvent.inputValue.trim()
+                                .isNotEmpty()
+                        )
+                            ErrorResourceState()
                         else
-                            passwordEmptyErrorState
-                    )
+                            passwordEmptyErrorResourceState
+                    ),
                 )
             }
 
@@ -56,9 +73,14 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             is LoginUiEvent.Submit -> {
                 val inputsValidated = validateInputs()
                 if (inputsValidated) {
-                    // TODO Trigger login in authentication flow
-                    loginState.value = loginState.value.copy(isLoginSuccessful = true)
+                    doLogin()
                 }
+            }
+
+            is LoginUiEvent.ErrorShowed -> {
+                loginState.value = loginState.value.copy(
+                    errorState = LoginErrorState(serviceErrorState = ErrorStringState())
+                )
             }
         }
     }
@@ -70,37 +92,26 @@ class LoginViewModel @Inject constructor() : ViewModel() {
      * @return false -> inputs are invalid
      */
     private fun validateInputs(): Boolean {
-        val emailOrMobileString = loginState.value.emailOrMobile.trim()
-        val passwordString = loginState.value.password
+        val emailString = loginState.value.userEmail.trim()
+        val passwordString = loginState.value.userPassword
         return when {
 
 
-            // Email/Mobile empty
-            emailOrMobileString.isEmpty() -> {
+            // Email empty
+            emailString.isEmpty() -> {
                 loginState.value = loginState.value.copy(
                     errorState = LoginErrorState(
-                        emailOrMobileErrorState = emailOrMobileEmptyErrorState
+                        emailErrorResourceState = emailEmptyErrorResourceState
                     )
                 )
                 false
             }
-
-            // Wrong Mobile format
-            (emailOrMobileString.isDigitsOnly() && !emailOrMobileString.phoneFormat()) -> {
-                loginState.value = loginState.value.copy(
-                    errorState = LoginErrorState(
-                        emailOrMobileErrorState = phoneFormatErrorState
-                    )
-                )
-                false
-            }
-
 
             // Wrong Email format
-            (!emailOrMobileString.isDigitsOnly() && !emailOrMobileString.emailFormat()) -> {
+            (!emailString.isDigitsOnly() && !emailString.emailFormat()) -> {
                 loginState.value = loginState.value.copy(
                     errorState = LoginErrorState(
-                        emailOrMobileErrorState = emailFormatErrorState
+                        emailErrorResourceState = emailFormatErrorResourceState
                     )
                 )
                 false
@@ -110,7 +121,7 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             passwordString.isEmpty() -> {
                 loginState.value = loginState.value.copy(
                     errorState = LoginErrorState(
-                        passwordErrorState = passwordEmptyErrorState
+                        passwordErrorResourceState = passwordEmptyErrorResourceState
                     )
                 )
                 false
@@ -119,7 +130,7 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             passwordString.length < 6 -> {
                 loginState.value = loginState.value.copy(
                     errorState = LoginErrorState(
-                        passwordErrorState = passwordFormatErrorState
+                        passwordErrorResourceState = passwordFormatErrorResourceState
                     )
                 )
                 false
@@ -132,6 +143,49 @@ class LoginViewModel @Inject constructor() : ViewModel() {
                 true
             }
         }
+    }
+
+
+    /**
+     * Function to validate a user is Login
+     */
+    private fun isLogin() {
+        val user = firebaseGetUserUseCase.invoke()
+        if (user != null) {
+            loginState.value = loginState.value.copy(isLoginSuccessful = true)
+        }
+    }
+
+
+    /**
+     * Function to login a user
+     */
+
+    private fun doLogin() = viewModelScope.launch {
+        val emailString = loginState.value.userEmail.trim()
+        val passwordString = loginState.value.userPassword
+
+        val result = firebaseUserLoginUseCase(emailString, passwordString)
+
+        when (result) {
+            is Resource.Failure -> {
+                loginState.value = loginState.value.copy(
+                    errorState = LoginErrorState(
+                        serviceErrorState = ErrorStringState(
+                            hasError = true,
+                            result.exception?.message ?: ""
+                        )
+                    )
+                )
+            }
+
+            Resource.Loading -> {}
+            is Resource.Success -> {
+                loginState.value = loginState.value.copy(isLoginSuccessful = true)
+            }
+        }
+
+
     }
 
 }

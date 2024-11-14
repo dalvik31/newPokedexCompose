@@ -15,7 +15,7 @@ import com.dalvik.newpokedex.ui.theme.AppTheme
 @Composable
 fun RecoveryPasswordInputs(
     recoveryPasswordState: RecoveryPasswordState,
-    onEmailOrPhoneChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
     // Recovery password Inputs Section
@@ -26,11 +26,11 @@ fun RecoveryPasswordInputs(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = AppTheme.dimens.paddingLarge),
-            value = recoveryPasswordState.emailOrMobile,
-            onValueChange = onEmailOrPhoneChange,
+            value = recoveryPasswordState.userEmail,
+            onValueChange = onEmailChange,
             label = stringResource(id = R.string.recovery_password_email_label),
-            isError = recoveryPasswordState.errorState.emailOrMobileErrorState.hasError,
-            errorText = stringResource(id = recoveryPasswordState.errorState.emailOrMobileErrorState.errorMessageStringResource),
+            isError = recoveryPasswordState.errorState.emailErrorResourceState.hasError,
+            errorText = stringResource(id = recoveryPasswordState.errorState.emailErrorResourceState.errorMessageStringResource),
             imeAction = ImeAction.Next
         )
 

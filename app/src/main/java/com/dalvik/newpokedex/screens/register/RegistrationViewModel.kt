@@ -2,15 +2,21 @@ package com.dalvik.newpokedex.screens.register
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.dalvik.newpokedex.ui.common.state.ErrorState
+import androidx.lifecycle.viewModelScope
+import com.dalvik.newpokedex.domain.FirebaseUserSignUpUseCase
+import com.dalvik.newpokedex.firebase.Resource
+import com.dalvik.newpokedex.ui.common.state.ErrorResourceState
+import com.dalvik.newpokedex.ui.common.state.ErrorStringState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for Register Screen
  */
 @HiltViewModel
-class RegistrationViewModel @Inject constructor() : ViewModel() {
+class RegistrationViewModel @Inject constructor(private val firebaseUserSignUpUseCase: FirebaseUserSignUpUseCase) :
+    ViewModel() {
 
     var registrationState = mutableStateOf(RegistrationState())
         private set
@@ -24,33 +30,16 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             // Email id changed event
             is RegistrationUiEvent.EmailChanged -> {
                 registrationState.value = registrationState.value.copy(
-                    emailId = registrationUiEvent.inputValue,
+                    userEmail = registrationUiEvent.inputValue,
                     errorState = registrationState.value.errorState.copy(
-                        emailIdErrorState = if (registrationUiEvent.inputValue.trim().isEmpty()) {
-                            // Email id empty state
-                            emailEmptyErrorState
-                        } else {
-                            // Valid state
-                            ErrorState()
-                        }
-
-                    )
-                )
-            }
-
-            // Mobile Number changed event
-            is RegistrationUiEvent.MobileNumberChanged -> {
-                registrationState.value = registrationState.value.copy(
-                    mobileNumber = registrationUiEvent.inputValue,
-                    errorState = registrationState.value.errorState.copy(
-                        mobileNumberErrorState = if (registrationUiEvent.inputValue.trim()
+                        emailIdErrorResourceState = if (registrationUiEvent.inputValue.trim()
                                 .isEmpty()
                         ) {
-                            // Mobile Number Empty state
-                            mobileNumberEmptyErrorState
+                            // Email id empty state
+                            emailEmptyErrorResourceState
                         } else {
                             // Valid state
-                            ErrorState()
+                            ErrorResourceState()
                         }
 
                     )
@@ -60,14 +49,16 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             // Password changed event
             is RegistrationUiEvent.PasswordChanged -> {
                 registrationState.value = registrationState.value.copy(
-                    password = registrationUiEvent.inputValue,
+                    userPassword = registrationUiEvent.inputValue,
                     errorState = registrationState.value.errorState.copy(
-                        passwordErrorState = if (registrationUiEvent.inputValue.trim().isEmpty()) {
+                        passwordErrorResourceState = if (registrationUiEvent.inputValue.trim()
+                                .isEmpty()
+                        ) {
                             // Password Empty state
-                            passwordEmptyErrorState
+                            passwordEmptyErrorResourceState
                         } else {
                             // Valid state
-                            ErrorState()
+                            ErrorResourceState()
                         }
 
                     )
@@ -79,20 +70,20 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
                 registrationState.value = registrationState.value.copy(
                     confirmPassword = registrationUiEvent.inputValue,
                     errorState = registrationState.value.errorState.copy(
-                        confirmPasswordErrorState = when {
+                        confirmPasswordErrorResourceState = when {
 
                             // Empty state of confirm password
                             registrationUiEvent.inputValue.trim().isEmpty() -> {
-                                confirmPasswordEmptyErrorState
+                                confirmPasswordEmptyErrorResourceState
                             }
 
                             // Password is different than the confirm password
-                            registrationState.value.password.trim() != registrationUiEvent.inputValue -> {
-                                passwordMismatchErrorState
+                            registrationState.value.userPassword.trim() != registrationUiEvent.inputValue -> {
+                                passwordMismatchErrorResourceState
                             }
 
                             // Valid state
-                            else -> ErrorState()
+                            else -> ErrorResourceState()
                         }
                     )
                 )
@@ -103,9 +94,7 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             is RegistrationUiEvent.Submit -> {
                 val inputsValidated = validateInputs()
                 if (inputsValidated) {
-                    // TODO Trigger registration in authentication flow
-                    registrationState.value =
-                        registrationState.value.copy(isRegistrationSuccessful = true)
+                    registerUser()
                 }
             }
         }
@@ -118,9 +107,8 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
      * @return false -> inputs are invalid
      */
     private fun validateInputs(): Boolean {
-        val emailString = registrationState.value.emailId.trim()
-        val mobileNumberString = registrationState.value.mobileNumber.trim()
-        val passwordString = registrationState.value.password.trim()
+        val emailString = registrationState.value.userEmail.trim()
+        val passwordString = registrationState.value.userPassword.trim()
         val confirmPasswordString = registrationState.value.confirmPassword.trim()
 
         return when {
@@ -129,18 +117,7 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             emailString.isEmpty() -> {
                 registrationState.value = registrationState.value.copy(
                     errorState = RegistrationErrorState(
-                        emailIdErrorState = emailEmptyErrorState
-                    )
-                )
-                false
-            }
-
-
-            //Mobile Number Empty
-            mobileNumberString.isEmpty() -> {
-                registrationState.value = registrationState.value.copy(
-                    errorState = RegistrationErrorState(
-                        mobileNumberErrorState = mobileNumberEmptyErrorState
+                        emailIdErrorResourceState = emailEmptyErrorResourceState
                     )
                 )
                 false
@@ -150,7 +127,7 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             passwordString.isEmpty() -> {
                 registrationState.value = registrationState.value.copy(
                     errorState = RegistrationErrorState(
-                        passwordErrorState = passwordEmptyErrorState
+                        passwordErrorResourceState = passwordEmptyErrorResourceState
                     )
                 )
                 false
@@ -160,7 +137,7 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             confirmPasswordString.isEmpty() -> {
                 registrationState.value = registrationState.value.copy(
                     errorState = RegistrationErrorState(
-                        confirmPasswordErrorState = confirmPasswordEmptyErrorState
+                        confirmPasswordErrorResourceState = confirmPasswordEmptyErrorResourceState
                     )
                 )
                 false
@@ -170,7 +147,7 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
             passwordString != confirmPasswordString -> {
                 registrationState.value = registrationState.value.copy(
                     errorState = RegistrationErrorState(
-                        confirmPasswordErrorState = passwordMismatchErrorState
+                        confirmPasswordErrorResourceState = passwordMismatchErrorResourceState
                     )
                 )
                 false
@@ -184,5 +161,41 @@ class RegistrationViewModel @Inject constructor() : ViewModel() {
                 true
             }
         }
+    }
+
+
+    /**
+     * Function to login a user
+     */
+
+    private fun registerUser() = viewModelScope.launch {
+        val emailString = registrationState.value.userEmail.trim()
+        val passwordString = registrationState.value.userPassword
+
+        val result = firebaseUserSignUpUseCase(emailString, passwordString)
+
+        when (result) {
+            is Resource.Failure -> {
+                registrationState.value = registrationState.value.copy(
+                    errorState = RegistrationErrorState(
+                        serviceErrorState = ErrorStringState(
+                            hasError = true,
+                            result.exception?.message ?: ""
+                        )
+                    )
+                )
+            }
+
+            Resource.Loading -> {
+
+            }
+
+            is Resource.Success -> {
+                registrationState.value =
+                    registrationState.value.copy(isRegistrationSuccessful = true)
+            }
+        }
+
+
     }
 }

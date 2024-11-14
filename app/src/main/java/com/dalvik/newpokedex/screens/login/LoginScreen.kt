@@ -15,11 +15,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -29,13 +29,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.dalvik.newpokedex.R
-import com.dalvik.newpokedex.ui.common.customComposableViews.MediumTitleText
 import com.dalvik.newpokedex.ui.common.customComposableViews.TitleText
+import com.dalvik.newpokedex.ui.common.customComposableViews.snack_bar.SnackBarError
+import com.dalvik.newpokedex.ui.common.customComposableViews.snack_bar.rememberSnackBarState
 import com.dalvik.newpokedex.ui.theme.AppTheme
 import com.dalvik.newpokedex.ui.theme.NewPokedexTheme
 
@@ -48,11 +48,9 @@ fun LoginScreen(
     onNavigateToAuthenticatedRoute: () -> Unit
 ) {
 
-    val loginState by remember {
-        loginViewModel.loginState
-    }
+    val loginState = loginViewModel.loginState.collectAsState()
 
-    if (loginState.isLoginSuccessful) {
+    if (loginState.value.isLoginSuccessful) {
         /**
          * Navigate to Authenticated navigation route
          * once login is successful
@@ -62,7 +60,50 @@ fun LoginScreen(
         }
     } else {
 
-        // Full Screen Content
+        ScreenContent(
+            loginState = loginState.value,
+            onNavigateToRegistration,
+            onNavigateToForgotPassword,
+            onEmailChange = { inputString ->
+                loginViewModel.onUiEvent(
+                    loginUiEvent = LoginUiEvent.EmailChanged(
+                        inputString
+                    )
+                )
+            },
+            onPasswordChange = { inputString ->
+                loginViewModel.onUiEvent(
+                    loginUiEvent = LoginUiEvent.PasswordChanged(
+                        inputString
+                    )
+                )
+            },
+            onSubmit = {
+                loginViewModel.onUiEvent(loginUiEvent = LoginUiEvent.Submit)
+            },
+            onShowedError = { loginViewModel.onUiEvent(loginUiEvent = LoginUiEvent.ErrorShowed) })
+    }
+}
+
+@Composable
+fun ScreenContent(
+    loginState: LoginState,
+    onNavigateToRegistration: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onShowedError: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
+            .imePadding()
+            .systemBarsPadding(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        val snackBarError = rememberSnackBarState()
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,7 +114,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Main card Content for Login
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -84,8 +124,6 @@ fun LoginScreen(
                         .padding(horizontal = AppTheme.dimens.paddingLarge)
                         .padding(bottom = AppTheme.dimens.paddingExtraLarge)
                 ) {
-
-
                     // Login Logo
                     AsyncImage(
                         colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
@@ -107,36 +145,26 @@ fun LoginScreen(
                             .padding(top = AppTheme.dimens.paddingLarge)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        text = stringResource(id = R.string.login_heading_text)
+                        text = stringResource(id = R.string.login_heading_text),
                     )
 
                     // Login Inputs Composable
                     LoginInputs(
                         loginState = loginState,
-                        onEmailOrMobileChange = { inputString ->
-                            loginViewModel.onUiEvent(
-                                loginUiEvent = LoginUiEvent.EmailOrMobileChanged(
-                                    inputString
-                                )
-                            )
-                        },
-                        onPasswordChange = { inputString ->
-                            loginViewModel.onUiEvent(
-                                loginUiEvent = LoginUiEvent.PasswordChanged(
-                                    inputString
-                                )
-                            )
-                        },
-                        onSubmit = {
-                            loginViewModel.onUiEvent(loginUiEvent = LoginUiEvent.Submit)
-                        },
+                        onEmailChange = onEmailChange,
+                        onPasswordChange = onPasswordChange,
+                        onSubmit = onSubmit,
                         onForgotPasswordClick = onNavigateToForgotPassword
                     )
+
+                    if (loginState.errorState.serviceErrorState.hasError) {
+                        snackBarError.addMessage(loginState.errorState.serviceErrorState.errorMessageStringResource)
+                        onShowedError.invoke()
+                    }
 
                 }
             }
 
-            // Register Section
             Row(
                 modifier = Modifier.padding(AppTheme.dimens.paddingNormal),
                 horizontalArrangement = Arrangement.Center,
@@ -156,20 +184,25 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+
+
         }
-
+        SnackBarError(state = snackBarError)
     }
-
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewLoginScreen() {
     NewPokedexTheme {
-        LoginScreen(
+        ScreenContent(
+            loginState = LoginState(),
             onNavigateToForgotPassword = {},
             onNavigateToRegistration = {},
-            onNavigateToAuthenticatedRoute = {}
+            onEmailChange = {},
+            onPasswordChange = {},
+            onSubmit = {},
+            onShowedError = {}
         )
     }
 }

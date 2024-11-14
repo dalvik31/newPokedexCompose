@@ -1,11 +1,9 @@
 package com.dalvik.newpokedex.screens.recovery_password
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import com.dalvik.newpokedex.extensions.emailFormat
-import com.dalvik.newpokedex.extensions.phoneFormat
-import com.dalvik.newpokedex.ui.common.state.ErrorState
+import com.dalvik.newpokedex.ui.common.state.ErrorResourceState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -23,18 +21,18 @@ class RecoveryPasswordViewModel @Inject constructor() : ViewModel() {
      */
     fun onUiEvent(recoveryPasswordUiEvent: RecoveryPasswordUiEvent) {
         when (recoveryPasswordUiEvent) {
-            is RecoveryPasswordUiEvent.EmailOrPhoneChanged -> {
+            is RecoveryPasswordUiEvent.EmailChanged -> {
                 recoveryPasswordState.value = recoveryPasswordState.value.copy(
-                    emailOrMobile = recoveryPasswordUiEvent.inputValue,
+                    userEmail = recoveryPasswordUiEvent.inputValue,
                     errorState = recoveryPasswordState.value.errorState.copy(
-                        emailOrMobileErrorState = if (recoveryPasswordUiEvent.inputValue.trim()
+                        emailErrorResourceState = if (recoveryPasswordUiEvent.inputValue.trim()
                                 .isEmpty()
                         ) {
                             // Email or phone empty state
-                            emailOrMobileEmptyErrorState
+                            emailEmptyErrorResourceState
                         } else {
                             // Valid state
-                            ErrorState()
+                            ErrorResourceState()
                         }
 
                     )
@@ -58,35 +56,25 @@ class RecoveryPasswordViewModel @Inject constructor() : ViewModel() {
      * @return false -> inputs are invalid
      */
     private fun validateInputs(): Boolean {
-        val emailOrMobileString = recoveryPasswordState.value.emailOrMobile.trim()
+        val emailString = recoveryPasswordState.value.userEmail.trim()
 
         return when {
 
-            // Email/Mobile empty
-            emailOrMobileString.isEmpty() -> {
+            // Email empty
+            emailString.isEmpty() -> {
                 recoveryPasswordState.value = recoveryPasswordState.value.copy(
                     errorState = RecoveryPasswordErrorState(
-                        emailOrMobileErrorState = emailOrMobileEmptyErrorState
-                    )
-                )
-                false
-            }
-
-            // Wrong Mobile format
-            (emailOrMobileString.isDigitsOnly() && !emailOrMobileString.phoneFormat()) -> {
-                recoveryPasswordState.value = recoveryPasswordState.value.copy(
-                    errorState = RecoveryPasswordErrorState(
-                        emailOrMobileErrorState = phoneFormatErrorState
+                        emailErrorResourceState = emailEmptyErrorResourceState
                     )
                 )
                 false
             }
 
             // Wrong Email format
-            (!emailOrMobileString.isDigitsOnly() && !emailOrMobileString.emailFormat()) -> {
+            (!emailString.emailFormat()) -> {
                 recoveryPasswordState.value = recoveryPasswordState.value.copy(
                     errorState = RecoveryPasswordErrorState(
-                        emailOrMobileErrorState = emailFormatErrorState
+                        emailErrorResourceState = emailFormatErrorResourceState
                     )
                 )
                 false

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.gms.services)
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
 }
@@ -49,6 +50,15 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // If your android version `targetSdk` and `compileSdk` <= 33, you need to add this line
+    project.configurations.configureEach {
+        resolutionStrategy {
+            force("androidx.emoji2:emoji2-views-helper:1.3.0")
+            force("androidx.emoji2:emoji2:1.3.0")
+        }
+    }
+
 }
 
 dependencies {
@@ -74,7 +84,11 @@ dependencies {
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    /**Firebase Auth*/
+
+    /**FIREBASE*/
+    /**Bom*/
+    implementation(platform(libs.firebase.bom))
+    /**Auth*/
     implementation(libs.firebase.auth.ktx)
 
     /**Jetpack Compose Material icons*/

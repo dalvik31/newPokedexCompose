@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1048984872626",
+    "project_id": "poke-compose",
+    "storage_bucket": "poke-compose.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048984872626:android:4a33d83ddaa0a7bb1bcbab",
+        "android_client_info": {
+          "package_name": "com.dalvik.newpokedex"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXgMDp3uBPOvhh9X0kwbko2HnCjPBCtIw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

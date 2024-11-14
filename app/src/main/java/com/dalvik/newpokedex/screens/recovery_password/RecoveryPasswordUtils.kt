@@ -1,20 +1,15 @@
 package com.dalvik.newpokedex.screens.recovery_password
 
 import com.dalvik.newpokedex.R
-import com.dalvik.newpokedex.ui.common.state.ErrorState
+import com.dalvik.newpokedex.ui.common.state.ErrorResourceState
 
 
-val emailOrMobileEmptyErrorState = ErrorState(
+val emailEmptyErrorResourceState = ErrorResourceState(
     hasError = true,
-    errorMessageStringResource = R.string.login_error_msg_empty_email_mobile
+    errorMessageStringResource = R.string.login_error_msg_empty_email
 )
 
-val emailFormatErrorState = ErrorState(
+val emailFormatErrorResourceState = ErrorResourceState(
     hasError = true,
-    R.string.login_error_msg_format_email_mobile
-)
-
-val phoneFormatErrorState = ErrorState(
-    hasError = true,
-    R.string.login_error_msg_format_phone_mobile
+    R.string.login_error_msg_format_email
 )

@@ -95,9 +95,9 @@ fun RecoveryPasswordScreen(
                      */
                     RecoveryPasswordInputs(
                         recoveryPasswordState = recoveryPasswordState,
-                        onEmailOrPhoneChange = { inputString ->
+                        onEmailChange = { inputString ->
                             recoveryPasswordViewModel.onUiEvent(
-                                recoveryPasswordUiEvent = RecoveryPasswordUiEvent.EmailOrPhoneChanged(
+                                recoveryPasswordUiEvent = RecoveryPasswordUiEvent.EmailChanged(
                                     inputValue = inputString
                                 )
                             )
